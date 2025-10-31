@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: jtrade
+
+jtrade:
+  # 项目目录配置
+  project-dir: ./JTrade
+  results-dir: ./results
+  data-dir: ./data
+  data-cache-dir: ./data/cache
+  
+  # LLM配置
+  llm:
+    # 主LLM提供商选择: openai, qwen, deepseek, ollama
+    provider: qwen
+    
+    # 深度思考模型（用于复杂决策）
+    deep-think-model: ${jtrade.llm.qwen.deep-model}
+    
+    # 快速思考模型（用于快速分析）
+    quick-think-model: ${jtrade.llm.qwen.quick-model}
+    
+    # 通用配置
+    timeout: 60000  # 超时时间（毫秒）
+    max-retries: 3  # 最大重试次数
+    
+    # OpenAI配置
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: https://api.openai.com/v1
+      deep-model: o1-mini
+      quick-model: gpt-4o-mini
+    
+    # 通义千问配置
+    qwen:
+      api-key: ${DASHSCOPE_API_KEY:}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      deep-model: qwen-plus
+      quick-model: qwen-turbo
+    
+    # DeepSeek配置
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: https://api.deepseek.com/v1
+      deep-model: deepseek-chat
+      quick-model: deepseek-chat
+    
+    # Ollama配置
+    ollama:
+      api-key: ""
+      base-url: http://localhost:11434/v1
+      deep-model: qwen2:72b
+      quick-model: qwen2:7b
+  
+  # 数据源配置
+  datasource:
+    finnhub:
+      api-key: ${FINNHUB_API_KEY:}
+      base-url: https://finnhub.io/api/v1
+      enabled: true
+    yahoo-finance:
+      enabled: true
+    alpha-vantage:
+      api-key: ${ALPHA_VANTAGE_API_KEY:}
+      base-url: https://www.alphavantage.co/query
+      enabled: false
+    fmp:
+      api-key: ${FMP_API_KEY:}
+      base-url: https://financialmodelingprep.com/api/v3
+      enabled: false
+  
+  # 辩论配置
+  debate:
+    max-rounds: 1
+  
+  # 风险辩论配置
+  risk-debate:
+    max-rounds: 1
+  
+  # 工作流配置
+  workflow:
+    max-recursion-limit: 100
+  
+  # 数据源配置
+  data-source:
+    online-tools: true
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    io.leavesfly.jtrade: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

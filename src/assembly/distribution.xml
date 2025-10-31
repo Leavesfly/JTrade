@@ -1,0 +1,57 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 
+          http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+    <id>distribution</id>
+    <formats>
+        <format>tar.gz</format>
+        <format>zip</format>
+    </formats>
+    
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <baseDirectory>jtrade-${project.version}</baseDirectory>
+    
+    <fileSets>
+        <!-- 包含启动脚本 -->
+        <fileSet>
+            <directory>${project.basedir}/scripts</directory>
+            <outputDirectory>bin</outputDirectory>
+            <includes>
+                <include>*.sh</include>
+                <include>*.bat</include>
+            </includes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        
+        <!-- 包含配置文件 -->
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources</directory>
+            <outputDirectory>config</outputDirectory>
+            <includes>
+                <include>*.properties</include>
+                <include>*.yml</include>
+                <include>*.yaml</include>
+                <include>prompts/**</include>
+            </includes>
+        </fileSet>
+        
+        <!-- 包含文档 -->
+        <fileSet>
+            <directory>${project.basedir}</directory>
+            <outputDirectory>docs</outputDirectory>
+            <includes>
+                <include>README.md</include>
+                <include>PROJECT_STATUS.md</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+    
+    <files>
+        <!-- 包含可执行JAR -->
+        <file>
+            <source>${project.build.directory}/${project.build.finalName}-exec.jar</source>
+            <outputDirectory>lib</outputDirectory>
+            <destName>jtrade.jar</destName>
+        </file>
+    </files>
+</assembly>

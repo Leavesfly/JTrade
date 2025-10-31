@@ -1,0 +1,7 @@
+spring:
+  profiles:
+    active: dev
+
+jtrade:
+  llm:
+    provider: qwen  # 开发环境使用通义千问

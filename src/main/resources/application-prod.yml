@@ -1,0 +1,4 @@
+jtrade:
+  llm:
+    provider: openai  # 生产环境使用OpenAI
+    timeout: 120000  # 生产环境超时时间更长
