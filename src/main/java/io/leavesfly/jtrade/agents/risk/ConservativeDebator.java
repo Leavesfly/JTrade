@@ -28,10 +28,7 @@ import java.util.LinkedHashMap;
 @Slf4j
 @Component
 public class ConservativeDebator extends BaseRecAgent {
-    
-    // Deleted: moved to BaseRecAgent
-    // Deleted: moved to BaseRecAgent
-    
+
     public ConservativeDebator(LlmClient llmClient, DataAggregator dataAggregator, AppConfig appConfig) {
         super(llmClient, dataAggregator, appConfig);
     }

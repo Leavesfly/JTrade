@@ -27,10 +27,7 @@ import java.util.LinkedHashMap;
 @Slf4j
 @Component
 public class Trader extends BaseRecAgent {
-    
-    // Deleted: moved to BaseRecAgent
-    // Deleted: moved to BaseRecAgent
-    
+
     public Trader(LlmClient llmClient, DataAggregator dataAggregator, AppConfig appConfig) {
         super(llmClient, dataAggregator, appConfig);
     }

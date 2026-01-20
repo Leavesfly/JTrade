@@ -4,7 +4,7 @@ import io.leavesfly.jtrade.agents.analysts.FundamentalsAnalyst;
 import io.leavesfly.jtrade.agents.analysts.MarketAnalyst;
 import io.leavesfly.jtrade.agents.analysts.NewsAnalyst;
 import io.leavesfly.jtrade.agents.analysts.SocialMediaAnalyst;
-import io.leavesfly.jtrade.agents.analysts.RecAgent;
+import io.leavesfly.jtrade.agents.analysts.ComprehensiveAnalyst;
 import io.leavesfly.jtrade.agents.base.Agent;
 import io.leavesfly.jtrade.agents.managers.ResearchManager;
 import io.leavesfly.jtrade.agents.managers.RiskManager;
@@ -74,7 +74,7 @@ public class TradingGraph {
             FundamentalsAnalyst fundamentalsAnalyst,
             NewsAnalyst newsAnalyst,
             SocialMediaAnalyst socialMediaAnalyst,
-            RecAgent recAgent,
+            ComprehensiveAnalyst comprehensiveAnalyst,
             BullResearcher bullResearcher,
             BearResearcher bearResearcher,
             Trader trader,
@@ -93,12 +93,12 @@ public class TradingGraph {
         this.analysts.add(newsAnalyst);
         this.analysts.add(socialMediaAnalyst);
         
-        // 配置开关：启用RecAgent作为分析阶段的工具智能体
+        // 配置开关：启用综合分析师作为工具智能体
         if (appConfig.getDataSource() != null && appConfig.getDataSource().isOnlineTools()) {
-            this.analysts.add(recAgent);
-            log.info("RecAgent 已启用并加入分析师阶段");
+            this.analysts.add(comprehensiveAnalyst);
+            log.info("综合分析师 (ComprehensiveAnalyst) 已启用并加入分析阶段");
         } else {
-            log.info("RecAgent 未启用（jtrade.dataSource.onlineTools=false）");
+            log.info("综合分析师未启用（jtrade.dataSource.onlineTools=false）");
         }
         
         this.bullResearcher = bullResearcher;

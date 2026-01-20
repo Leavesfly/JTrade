@@ -26,9 +26,7 @@ import java.util.LinkedHashMap;
 @Slf4j
 @Component
 public class RiskManager extends BaseRecAgent {
-    
-    // Deleted: moved to BaseRecAgent
-    // Deleted: moved to BaseRecAgent
+
     
     public RiskManager(LlmClient llmClient, DataAggregator dataAggregator, AppConfig appConfig) {
         super(llmClient, dataAggregator, appConfig);

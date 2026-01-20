@@ -30,7 +30,7 @@ public enum AgentType {
     NEUTRAL_DEBATER("中立分析师"),
     
     // 新增：工具支持的通用智能体
-    REC_AGENT("工具智能体");
+    COMPREHENSIVE_ANALYST("综合分析师");
     
     private final String displayName;
     

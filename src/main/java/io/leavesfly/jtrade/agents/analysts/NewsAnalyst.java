@@ -27,10 +27,6 @@ import java.util.List;
 @Component
 public class NewsAnalyst extends BaseRecAgent {
     
-    // Deleted: moved to BaseRecAgent
-    // Deleted: moved to BaseRecAgent
-    // Deleted: moved to BaseRecAgent
-    
     public NewsAnalyst(LlmClient llmClient, DataAggregator dataAggregator, AppConfig appConfig) {
         super(llmClient, dataAggregator, appConfig);
     }

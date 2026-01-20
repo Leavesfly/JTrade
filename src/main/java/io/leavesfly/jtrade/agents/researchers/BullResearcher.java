@@ -27,10 +27,7 @@ import java.util.LinkedHashMap;
 @Slf4j
 @Component
 public class BullResearcher extends BaseRecAgent {
-    
-    // Deleted: moved to BaseRecAgent
-    // Deleted: moved to BaseRecAgent
-    
+
     public BullResearcher(LlmClient llmClient, DataAggregator dataAggregator, AppConfig appConfig) {
         super(llmClient, dataAggregator, appConfig);
     }

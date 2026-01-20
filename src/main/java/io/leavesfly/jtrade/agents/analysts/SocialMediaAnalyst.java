@@ -26,11 +26,7 @@ import java.util.Map;
 @Slf4j
 @Component
 public class SocialMediaAnalyst extends BaseRecAgent {
-    
-    // Deleted: moved to BaseRecAgent
-    // Deleted: moved to BaseRecAgent
-    // Deleted: moved to BaseRecAgent
-    
+
     public SocialMediaAnalyst(LlmClient llmClient, DataAggregator dataAggregator, AppConfig appConfig) {
         super(llmClient, dataAggregator, appConfig);
     }
