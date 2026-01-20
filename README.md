@@ -1,4 +1,4 @@
-# JTrade
+# JTrade：多智能体交易决策系统
 
 <div align="center">
 
