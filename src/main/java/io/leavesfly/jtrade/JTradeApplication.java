@@ -3,6 +3,7 @@ package io.leavesfly.jtrade;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.cache.annotation.EnableCaching;
 
 /**
  * JTrade - Java版多智能体交易系统
@@ -13,6 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
  * @author 山泽
  * @since 2025-10-30
  */
+@EnableCaching
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class JTradeApplication {

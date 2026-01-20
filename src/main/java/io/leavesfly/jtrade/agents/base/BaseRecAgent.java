@@ -67,11 +67,6 @@ public abstract class BaseRecAgent implements Agent {
 
     /** 实际执行ReAct循环，返回最终答案与轨迹 */
     protected ReactResult performReact(AgentState state) {
-        String symbol = state.getCompany();
-        String dateStr = state.getDate() != null
-                ? state.getDate().format(DateTimeFormatter.ISO_DATE)
-                : "N/A";
-
         List<LlmMessage> messages = new ArrayList<>();
         messages.add(LlmMessage.system(buildSystemPrompt()));
         messages.add(LlmMessage.user(buildInitialUserPrompt(state)));
@@ -345,28 +340,56 @@ public abstract class BaseRecAgent implements Agent {
     }
 
     // ===== 解析与工具辅助 =====
+    // 改进的正则表达式：支持可选的 json 代码块标签，更宽松的空格匹配
     private static final Pattern ACTION_PATTERN =
-            Pattern.compile("(?s)Action\\s*:\\s*(\\w+)\\s*\\n\\s*Action Input\\s*:\\s*(\\{.*?\\})");
+            Pattern.compile("(?si)Action\\s*:\\s*(\\w+).*?Action Input\\s*:\\s*(?:```(?:json)?\\s*)?(\\{.*?\\})(?:\\s*```)?");
 
     private ActionCall extractActionCall(String content) {
         Matcher m = ACTION_PATTERN.matcher(content);
-        if (!m.find()) return null;
+        if (!m.find()) {
+            // 备选方案：尝试直接寻找 JSON 块，如果包含关键工具参数
+            if (content.contains("\"symbol\"") && content.contains("{") && content.contains("}")) {
+                log.debug("尝试从非标准格式中提取 Action...");
+                // 这里的逻辑可以根据实际情况进一步增强
+            }
+            return null;
+        }
+        
         String name = m.group(1).trim();
         String json = m.group(2).trim();
         try {
             JsonNode node = mapper.readTree(json);
+            @SuppressWarnings("unchecked")
             Map<String, Object> map = mapper.convertValue(node, Map.class);
             return new ActionCall(name, map);
         } catch (Exception e) {
-            log.warn("Action Input解析失败: {}", e.getMessage());
+            log.warn("Action Input 解析失败，尝试清洗 JSON: {}", e.getMessage());
+            // 尝试简单的清洗：移除可能导致解析失败的前后非 JSON 字符
+            try {
+                int start = json.indexOf('{');
+                int end = json.lastIndexOf('}');
+                if (start >= 0 && end > start) {
+                    String cleanedJson = json.substring(start, end + 1);
+                    JsonNode node = mapper.readTree(cleanedJson);
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> map = mapper.convertValue(node, Map.class);
+                    return new ActionCall(name, map);
+                }
+            } catch (Exception e2) {
+                log.error("清洗后解析依然失败: {}", json);
+            }
             return new ActionCall(name, Collections.emptyMap());
         }
     }
 
     private String extractFinalAnswer(String content) {
-        int idx = content.indexOf("Final Answer:");
-        if (idx < 0) return null;
-        return content.substring(idx + "Final Answer:".length()).trim();
+        // 不区分大小写匹配 Final Answer
+        String pattern = "(?i)Final Answer\\s*:";
+        Pattern r = Pattern.compile(pattern);
+        Matcher m = r.matcher(content);
+        
+        if (!m.find()) return null;
+        return content.substring(m.end()).trim();
     }
 
     protected String toJson(Object obj) {

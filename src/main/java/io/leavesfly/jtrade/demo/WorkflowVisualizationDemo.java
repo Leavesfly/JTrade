@@ -36,7 +36,7 @@ public class WorkflowVisualizationDemo {
     }
     
     @Bean
-    public CommandLineRunner visualizationDemo(
+    public CommandLineRunner workflowVisualizationRunner(
             MarketAnalyst marketAnalyst,
             FundamentalsAnalyst fundamentalsAnalyst,
             NewsAnalyst newsAnalyst,

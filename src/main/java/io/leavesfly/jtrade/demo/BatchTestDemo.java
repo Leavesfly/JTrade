@@ -31,7 +31,7 @@ public class BatchTestDemo {
     }
     
     @Bean
-    public CommandLineRunner batchTest(TradingService tradingService) {
+    public CommandLineRunner batchTestRunner(TradingService tradingService) {
         return args -> {
             System.out.println("\n" + "=".repeat(80));
             System.out.println("JTrade 批量测试演示");

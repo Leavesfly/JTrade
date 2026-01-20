@@ -24,6 +24,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * 交易图 - 协调所有智能体的主类
@@ -59,9 +61,6 @@ public class TradingGraph {
     // 辅助服务
     private final ReflectionService reflectionService;
     private final MemoryService memoryService;
-    
-    // 应用配置
-    private final AppConfig appConfig;
     
     // 条件逻辑
     private final ConditionalLogic conditionalLogic;
@@ -112,7 +111,6 @@ public class TradingGraph {
         this.riskManager = riskManager;
         this.reflectionService = reflectionService;
         this.memoryService = memoryService;
-        this.appConfig = appConfig;
         
         this.conditionalLogic = new ConditionalLogic();
         this.maxDebateRounds = 1;
@@ -174,17 +172,47 @@ public class TradingGraph {
     }
     
     /**
-     * 执行分析师团队
+     * 执行分析师团队（并行执行）
      */
     private AgentState executeAnalysts(AgentState state) {
-        log.info("\n【阶段1：分析师团队】");
+        log.info("\n【阶段1：分析师团队并行分析】");
         
-        for (Agent analyst : analysts) {
-            state = analyst.execute(state);
+        final AgentState initialState = state;
+        
+        // 并行执行所有分析师
+        List<CompletableFuture<AgentState>> futures = analysts.stream()
+                .map(analyst -> CompletableFuture.supplyAsync(() -> {
+                    log.info("分析师 {} 开始分析...", analyst.getName());
+                    return analyst.execute(initialState);
+                }))
+                .collect(Collectors.toList());
+        
+        // 等待所有任务完成并收集结果
+        List<AgentState> results = futures.stream()
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList());
+        
+        // 合并所有分析师的报告和元数据
+        AgentState.AgentStateBuilder mergedStateBuilder = state.toBuilder();
+        List<String> allReports = new ArrayList<>(state.getAnalystReports());
+        
+        for (AgentState result : results) {
+            // 合并报告
+            allReports.addAll(result.getAnalystReports());
+            // 合并元数据
+            result.getMetadata().forEach((key, value) -> mergedStateBuilder.metadata(result.getMetadata()));
         }
         
-        log.info("分析师报告: {} 份", state.getAnalystReports().size());
-        return state;
+        // 注意：Lombok @Builder(toBuilder=true) 对于 Map 的处理可能需要手动合并
+        AgentState finalState = mergedStateBuilder.analystReports(allReports).build();
+        
+        // 手动合并元数据以确保不丢失
+        for (AgentState result : results) {
+            result.getMetadata().forEach(finalState::putMetadata);
+        }
+        
+        log.info("阶段1完成，收集到分析师报告: {} 份", finalState.getAnalystReports().size());
+        return finalState;
     }
     
     /**

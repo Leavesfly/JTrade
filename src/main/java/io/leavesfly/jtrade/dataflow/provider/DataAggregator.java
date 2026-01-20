@@ -9,10 +9,24 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.BaseBarSeriesBuilder;
+import org.ta4j.core.indicators.EMAIndicator;
+import org.ta4j.core.indicators.MACDIndicator;
+import org.ta4j.core.indicators.RSIIndicator;
+import org.ta4j.core.indicators.SMAIndicator;
+import org.ta4j.core.indicators.bollinger.BollingerBandsLowerIndicator;
+import org.ta4j.core.indicators.bollinger.BollingerBandsMiddleIndicator;
+import org.ta4j.core.indicators.bollinger.BollingerBandsUpperIndicator;
+import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
+import org.ta4j.core.indicators.statistics.StandardDeviationIndicator;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +84,7 @@ public class DataAggregator {
     /**
      * 获取基本面数据（使用Yahoo Finance API）
      */
+    @Cacheable(value = "fundamentals", key = "#symbol")
     public FundamentalData getFundamentalData(String symbol) {
         log.info("获取 {} 的基本面数据", symbol);
         
@@ -182,6 +197,7 @@ public class DataAggregator {
     /**
      * 获取新闻数据（真实API）
      */
+    @Cacheable(value = "news", key = "#symbol + #limit")
     public List<NewsData> getNewsData(String symbol, int limit) {
         log.info("获取 {} 的新闻数据，限制 {} 条", symbol, limit);
         
@@ -225,6 +241,7 @@ public class DataAggregator {
     /**
      * 获取社交媒体情绪数据（使用情绪分析）
      */
+    @Cacheable(value = "sentiment", key = "#symbol")
     public Map<String, Object> getSocialMediaSentiment(String symbol) {
         log.info("获取 {} 的社交媒体情绪数据", symbol);
         
@@ -338,43 +355,60 @@ public class DataAggregator {
     }
     
     /**
-     * 获取技术指标数据（使用历史数据计算）
+     * 获取技术指标数据（使用 ta4j 计算）
      */
+    @Cacheable(value = "indicators", key = "#symbol")
     public Map<String, Double> getTechnicalIndicators(String symbol) {
         log.info("获取 {} 的技术指标数据", symbol);
         
         Map<String, Double> indicators = new HashMap<>();
         
         try {
-            // 获取过60天的市场数据用于计算技术指标
+            // 获取过去 60 天的市场数据用于计算技术指标
             LocalDate endDate = LocalDate.now();
             LocalDate startDate = endDate.minusDays(60);
             List<MarketData> marketData = getMarketData(symbol, startDate, endDate);
             
-            if (marketData.isEmpty()) {
-                log.warn("无法获取市场数据，返回模拟指标");
+            if (marketData.isEmpty() || marketData.size() < 2) {
+                log.warn("无法获取足够的市场数据，返回模拟指标");
                 return getFallbackTechnicalIndicators();
             }
             
-            // 计算RSI (Relative Strength Index)
-            double rsi = calculateRSI(marketData, 14);
-            indicators.put("RSI", rsi);
+            // 转换为 ta4j 的 BarSeries
+            BarSeries series = convertToBarSeries(symbol, marketData);
+            ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
+            int lastIndex = series.getEndIndex();
             
-            // 计算简单移动平均线 (SMA)
-            double sma20 = calculateSMA(marketData, 20);
-            double sma50 = calculateSMA(marketData, 50);
-            indicators.put("SMA_20", sma20);
-            indicators.put("SMA_50", sma50);
+            // 1. 计算 RSI (14)
+            RSIIndicator rsi = new RSIIndicator(closePrice, 14);
+            indicators.put("RSI", rsi.getValue(lastIndex).doubleValue());
             
-            // 计算MACD
-            Map<String, Double> macd = calculateMACD(marketData);
-            indicators.putAll(macd);
+            // 2. 计算 SMA (20, 50)
+            SMAIndicator sma20 = new SMAIndicator(closePrice, 20);
+            SMAIndicator sma50 = new SMAIndicator(closePrice, 50);
+            indicators.put("SMA_20", sma20.getValue(lastIndex).doubleValue());
+            indicators.put("SMA_50", sma50.getValue(lastIndex).doubleValue());
             
-            // 计算布林带 (Bollinger Bands)
-            Map<String, Double> bb = calculateBollingerBands(marketData, 20, 2.0);
-            indicators.putAll(bb);
+            // 3. 计算 MACD (12, 26, 9)
+            MACDIndicator macd = new MACDIndicator(closePrice, 12, 26);
+            EMAIndicator signalLine = new EMAIndicator(macd, 9);
             
-            log.info("成功计算技术指标: RSI={}, SMA20={}, SMA50={}", rsi, sma20, sma50);
+            indicators.put("MACD", macd.getValue(lastIndex).doubleValue());
+            indicators.put("MACD_Signal", signalLine.getValue(lastIndex).doubleValue());
+            indicators.put("MACD_Histogram", macd.getValue(lastIndex).minus(signalLine.getValue(lastIndex)).doubleValue());
+            
+            // 4. 计算布林带 (20, 2.0)
+            StandardDeviationIndicator sd20 = new StandardDeviationIndicator(closePrice, 20);
+            BollingerBandsMiddleIndicator bbMiddle = new BollingerBandsMiddleIndicator(sma20);
+            BollingerBandsUpperIndicator bbUpper = new BollingerBandsUpperIndicator(bbMiddle, sd20, series.numOf(2));
+            BollingerBandsLowerIndicator bbLower = new BollingerBandsLowerIndicator(bbMiddle, sd20, series.numOf(2));
+            
+            indicators.put("BB_UPPER", bbUpper.getValue(lastIndex).doubleValue());
+            indicators.put("BB_MIDDLE", bbMiddle.getValue(lastIndex).doubleValue());
+            indicators.put("BB_LOWER", bbLower.getValue(lastIndex).doubleValue());
+            
+            log.info("成功使用 ta4j 计算技术指标: RSI={}, SMA20={}, MACD={}", 
+                    indicators.get("RSI"), indicators.get("SMA_20"), indicators.get("MACD"));
             
         } catch (Exception e) {
             log.error("计算技术指标失败", e);
@@ -383,133 +417,26 @@ public class DataAggregator {
         
         return indicators;
     }
-    
+
     /**
-     * 计算RSI指标
+     * 将 MarketData 列表转换为 ta4j 的 BarSeries
      */
-    private double calculateRSI(List<MarketData> data, int period) {
-        if (data.size() < period + 1) {
-            return 50.0; // 默认值
+    private BarSeries convertToBarSeries(String symbol, List<MarketData> marketData) {
+        BarSeries series = new BaseBarSeriesBuilder().withName(symbol).build();
+        
+        for (MarketData data : marketData) {
+            ZonedDateTime dateTime = data.getDate().atStartOfDay(ZoneId.systemDefault());
+            series.addBar(
+                dateTime,
+                data.getOpen(),
+                data.getHigh(),
+                data.getLow(),
+                data.getClose(),
+                data.getVolume()
+            );
         }
         
-        double gainSum = 0.0;
-        double lossSum = 0.0;
-        
-        // 计算平均涨跌
-        for (int i = data.size() - period; i < data.size(); i++) {
-            double change = data.get(i).getClose().subtract(data.get(i - 1).getClose()).doubleValue();
-            if (change > 0) {
-                gainSum += change;
-            } else {
-                lossSum += Math.abs(change);
-            }
-        }
-        
-        double avgGain = gainSum / period;
-        double avgLoss = lossSum / period;
-        
-        if (avgLoss == 0) {
-            return 100.0;
-        }
-        
-        double rs = avgGain / avgLoss;
-        return 100.0 - (100.0 / (1.0 + rs));
-    }
-    
-    /**
-     * 计算简单移动平均线 (SMA)
-     */
-    private double calculateSMA(List<MarketData> data, int period) {
-        if (data.size() < period) {
-            period = data.size();
-        }
-        
-        double sum = 0.0;
-        for (int i = data.size() - period; i < data.size(); i++) {
-            sum += data.get(i).getClose().doubleValue();
-        }
-        
-        return sum / period;
-    }
-    
-    /**
-     * 计算MACD指标
-     */
-    private Map<String, Double> calculateMACD(List<MarketData> data) {
-        Map<String, Double> macd = new HashMap<>();
-        
-        if (data.size() < 26) {
-            macd.put("MACD", 0.0);
-            macd.put("MACD_Signal", 0.0);
-            macd.put("MACD_Histogram", 0.0);
-            return macd;
-        }
-        
-        // 计算EMA12和EMA26
-        double ema12 = calculateEMA(data, 12);
-        double ema26 = calculateEMA(data, 26);
-        double macdLine = ema12 - ema26;
-        
-        // 简化版本：使用MACD线的简单平均作为信号线
-        double signalLine = macdLine * 0.9; // 简化计算
-        
-        macd.put("MACD", macdLine);
-        macd.put("MACD_Signal", signalLine);
-        macd.put("MACD_Histogram", macdLine - signalLine);
-        
-        return macd;
-    }
-    
-    /**
-     * 计算指数移动平均线 (EMA)
-     */
-    private double calculateEMA(List<MarketData> data, int period) {
-        if (data.size() < period) {
-            return calculateSMA(data, data.size());
-        }
-        
-        double multiplier = 2.0 / (period + 1);
-        double ema = calculateSMA(data, period);
-        
-        // 从 period 位置开始计算 EMA
-        for (int i = data.size() - period; i < data.size(); i++) {
-            double price = data.get(i).getClose().doubleValue();
-            ema = (price - ema) * multiplier + ema;
-        }
-        
-        return ema;
-    }
-    
-    /**
-     * 计算布林带
-     */
-    private Map<String, Double> calculateBollingerBands(List<MarketData> data, int period, double numStdDev) {
-        Map<String, Double> bb = new HashMap<>();
-        
-        if (data.size() < period) {
-            double currentPrice = data.get(data.size() - 1).getClose().doubleValue();
-            bb.put("BB_UPPER", currentPrice * 1.05);
-            bb.put("BB_MIDDLE", currentPrice);
-            bb.put("BB_LOWER", currentPrice * 0.95);
-            return bb;
-        }
-        
-        // 计算中轨 (SMA)
-        double middle = calculateSMA(data, period);
-        
-        // 计算标准差
-        double sum = 0.0;
-        for (int i = data.size() - period; i < data.size(); i++) {
-            double diff = data.get(i).getClose().doubleValue() - middle;
-            sum += diff * diff;
-        }
-        double stdDev = Math.sqrt(sum / period);
-        
-        bb.put("BB_UPPER", middle + (numStdDev * stdDev));
-        bb.put("BB_MIDDLE", middle);
-        bb.put("BB_LOWER", middle - (numStdDev * stdDev));
-        
-        return bb;
+        return series;
     }
     
     /**

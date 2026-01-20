@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -22,7 +21,6 @@ import java.util.Properties;
 public class PromptManager {
     
     private final Properties prompts = new Properties();
-    private final Map<String, String> cache = new HashMap<>();
     
     public PromptManager() {
         loadPrompts();
@@ -76,246 +74,47 @@ public class PromptManager {
     }
     
     /**
-     * 获取市场分析师提示
+     * 获取 Prompt 模板（通用方法）
+     * 
+     * @param key 智能体标识，如 "analyst.market" 或 "react.trader"
+     * @return 包含系统提示和用户提示的模板
      */
-    public PromptTemplate getMarketAnalystPrompt() {
+    public PromptTemplate getTemplate(String key) {
         return new PromptTemplate(
-            getSystemPrompt("analyst.market"),
-            getUserPrompt("analyst.market")
+            getSystemPrompt(key),
+            getUserPrompt(key)
         );
     }
     
-    /**
-     * 获取基本面分析师提示
-     */
-    public PromptTemplate getFundamentalsAnalystPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("analyst.fundamentals"),
-            getUserPrompt("analyst.fundamentals")
-        );
-    }
+    // ========== 兼容旧版本的便捷方法（建议使用 getTemplate 代替） ==========
     
-    /**
-     * 获取新闻分析师提示
-     */
-    public PromptTemplate getNewsAnalystPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("analyst.news"),
-            getUserPrompt("analyst.news")
-        );
-    }
-    
-    /**
-     * 获取社交媒体分析师提示
-     */
-    public PromptTemplate getSocialMediaAnalystPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("analyst.social"),
-            getUserPrompt("analyst.social")
-        );
-    }
-    
-    /**
-     * 获取多头研究员提示
-     */
-    public PromptTemplate getBullResearcherPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("researcher.bull"),
-            getUserPrompt("researcher.bull")
-        );
-    }
-    
-    /**
-     * 获取空头研究员提示
-     */
-    public PromptTemplate getBearResearcherPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("researcher.bear"),
-            getUserPrompt("researcher.bear")
-        );
-    }
-    
-    /**
-     * 获取研究经理提示
-     */
-    public PromptTemplate getResearchManagerPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("manager.research"),
-            getUserPrompt("manager.research")
-        );
-    }
-    
-    /**
-     * 获取交易员提示
-     */
-    public PromptTemplate getTraderPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("trader"),
-            getUserPrompt("trader")
-        );
-    }
-    
-    /**
-     * 获取风险管理器提示
-     */
-    public PromptTemplate getRiskManagerPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("manager.risk"),
-            getUserPrompt("manager.risk")
-        );
-    }
-    
-    /**
-     * 获取分析反思提示
-     */
-    public PromptTemplate getAnalysisReflectionPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("reflection.analysis"),
-            getUserPrompt("reflection.analysis")
-        );
-    }
-    
-    /**
-     * 获取决策反思提示
-     */
-    public PromptTemplate getDecisionReflectionPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("reflection.decision"),
-            getUserPrompt("reflection.decision")
-        );
-    }
-    
-    /**
-     * 获取综合反思提示
-     */
-    public PromptTemplate getComprehensiveReflectionPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("reflection.comprehensive"),
-            getUserPrompt("reflection.comprehensive")
-        );
-    }
+    public PromptTemplate getMarketAnalystPrompt() { return getTemplate("analyst.market"); }
+    public PromptTemplate getFundamentalsAnalystPrompt() { return getTemplate("analyst.fundamentals"); }
+    public PromptTemplate getNewsAnalystPrompt() { return getTemplate("analyst.news"); }
+    public PromptTemplate getSocialMediaAnalystPrompt() { return getTemplate("analyst.social"); }
+    public PromptTemplate getBullResearcherPrompt() { return getTemplate("researcher.bull"); }
+    public PromptTemplate getBearResearcherPrompt() { return getTemplate("researcher.bear"); }
+    public PromptTemplate getResearchManagerPrompt() { return getTemplate("manager.research"); }
+    public PromptTemplate getTraderPrompt() { return getTemplate("trader"); }
+    public PromptTemplate getRiskManagerPrompt() { return getTemplate("manager.risk"); }
+    public PromptTemplate getAnalysisReflectionPrompt() { return getTemplate("reflection.analysis"); }
+    public PromptTemplate getDecisionReflectionPrompt() { return getTemplate("reflection.decision"); }
+    public PromptTemplate getComprehensiveReflectionPrompt() { return getTemplate("reflection.comprehensive"); }
     
     // ========== ReAct 工具智能体提示 ==========
     
-    /**
-     * 获取通用 ReAct 提示
-     */
-    public PromptTemplate getReactCommonPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.common"),
-            getUserPrompt("react.common")
-        );
-    }
-    
-    /**
-     * 获取市场分析师 ReAct 提示
-     */
-    public PromptTemplate getReactMarketAnalystPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.analyst.market"),
-            getUserPrompt("react.analyst.market")
-        );
-    }
-    
-    /**
-     * 获取基本面分析师 ReAct 提示
-     */
-    public PromptTemplate getReactFundamentalsAnalystPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.analyst.fundamentals"),
-            getUserPrompt("react.analyst.fundamentals")
-        );
-    }
-    
-    /**
-     * 获取新闻分析师 ReAct 提示
-     */
-    public PromptTemplate getReactNewsAnalystPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.analyst.news"),
-            getUserPrompt("react.analyst.news")
-        );
-    }
-    
-    /**
-     * 获取社交媒体分析师 ReAct 提示
-     */
-    public PromptTemplate getReactSocialMediaAnalystPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.analyst.social"),
-            getUserPrompt("react.analyst.social")
-        );
-    }
-    
-    /**
-     * 获取多头研究员 ReAct 提示
-     */
-    public PromptTemplate getReactBullResearcherPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.researcher.bull"),
-            getUserPrompt("react.researcher.bull")
-        );
-    }
-    
-    /**
-     * 获取空头研究员 ReAct 提示
-     */
-    public PromptTemplate getReactBearResearcherPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.researcher.bear"),
-            getUserPrompt("react.researcher.bear")
-        );
-    }
-    
-    /**
-     * 获取交易员 ReAct 提示
-     */
-    public PromptTemplate getReactTraderPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.trader"),
-            getUserPrompt("react.trader")
-        );
-    }
-    
-    /**
-     * 获取风险管理器 ReAct 提示
-     */
-    public PromptTemplate getReactRiskManagerPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.manager.risk"),
-            getUserPrompt("react.manager.risk")
-        );
-    }
-    
-    /**
-     * 获取激进辩论者 ReAct 提示
-     */
-    public PromptTemplate getReactAggressiveDebatorPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.debator.aggressive"),
-            getUserPrompt("react.debator.aggressive")
-        );
-    }
-    
-    /**
-     * 获取保守辩论者 ReAct 提示
-     */
-    public PromptTemplate getReactConservativeDebatorPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.debator.conservative"),
-            getUserPrompt("react.debator.conservative")
-        );
-    }
-    
-    /**
-     * 获取中立辩论者 ReAct 提示
-     */
-    public PromptTemplate getReactNeutralDebatorPrompt() {
-        return new PromptTemplate(
-            getSystemPrompt("react.debator.neutral"),
-            getUserPrompt("react.debator.neutral")
-        );
-    }
+    public PromptTemplate getReactCommonPrompt() { return getTemplate("react.common"); }
+    public PromptTemplate getReactMarketAnalystPrompt() { return getTemplate("react.analyst.market"); }
+    public PromptTemplate getReactFundamentalsAnalystPrompt() { return getTemplate("react.analyst.fundamentals"); }
+    public PromptTemplate getReactNewsAnalystPrompt() { return getTemplate("react.analyst.news"); }
+    public PromptTemplate getReactSocialMediaAnalystPrompt() { return getTemplate("react.analyst.social"); }
+    public PromptTemplate getReactBullResearcherPrompt() { return getTemplate("react.researcher.bull"); }
+    public PromptTemplate getReactBearResearcherPrompt() { return getTemplate("react.researcher.bear"); }
+    public PromptTemplate getReactTraderPrompt() { return getTemplate("react.trader"); }
+    public PromptTemplate getReactRiskManagerPrompt() { return getTemplate("react.manager.risk"); }
+    public PromptTemplate getReactAggressiveDebatorPrompt() { return getTemplate("react.debator.aggressive"); }
+    public PromptTemplate getReactConservativeDebatorPrompt() { return getTemplate("react.debator.conservative"); }
+    public PromptTemplate getReactNeutralDebatorPrompt() { return getTemplate("react.debator.neutral"); }
     
     /**
      * Prompt 模板类

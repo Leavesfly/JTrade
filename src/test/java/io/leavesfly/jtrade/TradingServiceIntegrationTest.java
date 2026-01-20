@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author 山泽
  */
 @Slf4j
-@SpringBootTest
+@SpringBootTest(classes = JTradeApplication.class)
 public class TradingServiceIntegrationTest {
     
     @Autowired

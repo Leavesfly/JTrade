@@ -35,7 +35,7 @@ public class PromptManagementDemo {
     }
     
     @Bean
-    public CommandLineRunner demo(PromptManager promptManager) {
+    public CommandLineRunner promptManagementDemoRunner(PromptManager promptManager) {
         return args -> {
             printBanner();
             

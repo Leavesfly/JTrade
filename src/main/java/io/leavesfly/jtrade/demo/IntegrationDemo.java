@@ -36,7 +36,7 @@ public class IntegrationDemo {
     }
     
     @Bean
-    public CommandLineRunner demo(TradingGraph tradingGraph, TradingService tradingService) {
+    public CommandLineRunner integrationDemoRunner(TradingGraph tradingGraph, TradingService tradingService) {
         return args -> {
             printBanner();
             

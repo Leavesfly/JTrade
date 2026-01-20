@@ -32,7 +32,7 @@ public class ComparativeAnalysisDemo {
     }
     
     @Bean
-    public CommandLineRunner comparativeDemo(TradingService tradingService) {
+    public CommandLineRunner comparativeAnalysisRunner(TradingService tradingService) {
         return args -> {
             System.out.println("\n" + "=".repeat(80));
             System.out.println("JTrade 对比分析演示");

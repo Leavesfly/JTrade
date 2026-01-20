@@ -33,7 +33,7 @@ public class JTradeCLI {
     }
     
     @Bean
-    public CommandLineRunner cli(TradingService tradingService, MemoryService memoryService) {
+    public CommandLineRunner jTradeCliRunner(TradingService tradingService, MemoryService memoryService) {
         return args -> {
             Scanner scanner = new Scanner(System.in);
             

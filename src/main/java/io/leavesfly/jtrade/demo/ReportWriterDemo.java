@@ -35,7 +35,7 @@ public class ReportWriterDemo {
     }
     
     @Bean
-    public CommandLineRunner demo(TradingService tradingService) {
+    public CommandLineRunner reportWriterDemoRunner(TradingService tradingService) {
         return args -> {
             printBanner();
             

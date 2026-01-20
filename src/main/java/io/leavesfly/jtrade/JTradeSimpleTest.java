@@ -27,7 +27,7 @@ public class JTradeSimpleTest {
     }
     
     @Bean
-    public CommandLineRunner simpleTest(TradingService tradingService) {
+    public CommandLineRunner jTradeSimpleTestRunner(TradingService tradingService) {
         return args -> {
             System.out.println("=".repeat(80));
             System.out.println("JTrade 系统测试");

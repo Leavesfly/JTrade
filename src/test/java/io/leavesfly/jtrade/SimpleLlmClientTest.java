@@ -19,7 +19,7 @@ import java.util.List;
  * @author 山泽
  */
 @Slf4j
-@SpringBootTest
+@SpringBootTest(classes = JTradeApplication.class)
 public class SimpleLlmClientTest {
     
     @Autowired

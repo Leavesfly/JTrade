@@ -29,7 +29,7 @@ public class AgentPerformanceDemo {
     }
     
     @Bean
-    public CommandLineRunner performanceDemo(List<Agent> agents) {
+    public CommandLineRunner agentPerformanceRunner(List<Agent> agents) {
         return args -> {
             System.out.println("\n" + "=".repeat(80));
             System.out.println("智能体性能分析演示");

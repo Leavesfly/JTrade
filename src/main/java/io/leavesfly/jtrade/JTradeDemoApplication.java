@@ -33,7 +33,7 @@ public class JTradeDemoApplication {
      * 演示如何使用JTrade进行交易决策分析
      */
     @Bean
-    public CommandLineRunner demo(TradingService tradingService, 
+    public CommandLineRunner jTradeDemoRunner(TradingService tradingService, 
                                    TradingGraph tradingGraph,
                                    MemoryService memoryService) {
         return args -> {
